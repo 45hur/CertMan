@@ -1,0 +1,108 @@
+﻿@page "/info"
+
+@using System.Security.Cryptography.X509Certificates;
+
+<h1>Certificate compatibility</h1>
+
+
+<div class="col-lg-6 control-section">
+    Please enter phrase that proctects the certificate: <br />
+    <div class='e-input-group'>
+        <label>
+            <input @oninput="OnPasswordChanged"
+                   required
+                   type="@(showPassword ? "text" : "password")"
+                   value="@password" />
+        </label>
+        
+
+        <span class='e-icons e-input-eye' @onclick="ToggleShowPassword"></span>
+    </div>
+</div>
+
+<div class="drag-drop-zone">
+
+    <BlazorInputFile.InputFile OnChange="ViewFile" />
+    @status
+</div>
+
+@if (fileName != null)
+{
+    <h3>@fileName</h3>
+    <pre>@textOut</pre>
+}
+
+@code {
+    const string DefaultStatus = "Drag & drop your .pfx certificate file here.";
+    const int MaxFileSize = 5 * 1024 * 1024; // 5MB
+    string status = DefaultStatus;
+    public string TxtType = "password";
+
+
+    [Parameter]
+    public string password { get; set; }
+    protected string fileName;
+    protected string fileTextContents;
+    private bool showPassword;
+    protected string textOut;
+
+    private void ToggleShowPassword()
+    {
+        showPassword = !showPassword;
+    }
+
+
+    async void OnPasswordChanged(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        password = (string)args.Value;
+
+        await Update();
+    }
+
+    async Task ViewFile(IFileListEntry[] files)
+    {
+        var file = files.FirstOrDefault();
+        if (file == null)
+        {
+            return;
+        }
+        else if (file.Size > MaxFileSize)
+        {
+            status = $"That's too big. Max size: {MaxFileSize} bytes.";
+        }
+        else
+        {
+            status = "Loading...";
+
+            using (var reader = new System.IO.StreamReader(file.Data))
+            {
+                fileTextContents = await reader.ReadToEndAsync();
+                fileName = file.Name;
+            }
+        }
+
+        status = "";
+
+        await Update();
+    }
+
+    async Task Update()
+    {
+        try
+        {
+            var cert = new X509Certificate2(fileName, password);
+            textOut = "YEY";
+        }
+        catch (Exception ex)
+        {
+            textOut = ex.Message;
+        }
+    }
+}
+<style>
+    .e-input-eye:before {
+        content: '\e345';
+        font-family: e-icons;
+        font-size: 13px;
+    }
+</style> 

@@ -1,0 +1,20 @@
+﻿@page "/pull"
+@inject IJSRuntime JS
+
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var filename = "keke";
+        await JS.InvokeAsync<string>("jsSaveAsFile", filename, Convert.ToBase64String(GetFileByteArrayFunction()));
+    }
+
+
+    protected byte[] GetFileByteArrayFunction()
+    {
+        return new byte[] { 1,2,3,4,5,6,7,8,9 } ;
+    }
+
+}
